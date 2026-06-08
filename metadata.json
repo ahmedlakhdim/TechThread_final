@@ -1,0 +1,6 @@
+{
+  "name": "TechThread",
+  "description": "Learn. Fix. Improve. A comprehensive full-stack platform for computer troubleshooting, community tutorials, and a smart interactive AI technical assistant.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
