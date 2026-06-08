@@ -1,4 +1,5 @@
 import express from "express";
+import { Resend } from "resend";
 import path from "path";
 import { GoogleGenAI } from "@google/genai";
 import { defaultArticles } from "./src/data/defaultArticles";
@@ -7,8 +8,13 @@ import { createClient } from "@supabase/supabase-js";
 
 // ===== Supabase Config =====
 const SUPABASE_URL = 'https://tpdmumgyxatarkmwjjpu.supabase.co';
-const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRwZG11bWd5eGF0YXJrbXdqanB1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg4NTA2OTMsImV4cCI6MjA5NDQyNjY5M30.pVSCeGXm8D6F4oaPnfXo_i1211GO3-SOsbWESMHx_xw';
-const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRwZG11bWd5eGF0YXJrbXdqanB1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg4NTA2OTMsImV4cCI6MjA5NDQyNjY5M30.pVSCeGXm8D6F4oaPnfXo_i1211GO3-SOsbWESMHx_xw';
+const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY || 'sb_secret_-r1f9UwnhJMOdgkxCWrRPg_vDy4yeid';
+const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
+// ===========================
+
+// ===== Resend Config =====
+const resend = new Resend(process.env.RESEND_API_KEY || "re_Up6s5MAA_PKMFte2nFr1sqkA5ytxZj6fW");
 // ===========================
 
 // Initialize Gemini
@@ -138,6 +144,36 @@ app.patch("/api/writer-requests/:id", async (req, res) => {
       .select()
       .single();
     invite = inviteData;
+
+    // Send email with code
+    try {
+      await resend.emails.send({
+        from: "TechThread <onboarding@resend.dev>",
+        to: reqData.email,
+        subject: "Your TechThread Writer Access Code",
+        html: `
+          <div style="font-family: -apple-system, sans-serif; max-width: 480px; margin: 0 auto; padding: 40px 20px;">
+            <h1 style="font-size: 24px; color: #1d1d1f; margin-bottom: 10px;">Welcome to TechThread ✍️</h1>
+            <p style="color: #6e6e73; font-size: 16px; line-height: 1.6;">
+              Your writer access request has been approved! Use the code below to sign in.
+            </p>
+            <div style="background: #f5f5f7; border-radius: 14px; padding: 30px; text-align: center; margin: 30px 0;">
+              <p style="color: #6e6e73; font-size: 14px; margin: 0 0 10px;">Your Access Code</p>
+              <p style="font-size: 42px; font-weight: 700; letter-spacing: 8px; color: #1d1d1f; margin: 0;">${code}</p>
+            </div>
+            <p style="color: #6e6e73; font-size: 14px; line-height: 1.6;">
+              Go to <a href="https://techthreadfinal-production-afbc.up.railway.app" style="color: #1d1d1f;">TechThread</a>, 
+              click <strong>"have an access code?"</strong>, enter your email and this code.
+            </p>
+            <p style="color: #9e9ea3; font-size: 12px; margin-top: 30px;">
+              This code can only be used once. If you didn't request this, ignore this email.
+            </p>
+          </div>
+        `
+      });
+    } catch (emailErr) {
+      console.error("Email error:", emailErr);
+    }
   }
 
   res.json({ message: `Request ${status}`, invite });
