@@ -15,7 +15,7 @@ export default function ArticleDetailView({ articleId, articles, user, onNavigat
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
 
-  const article = articles.find((a) => a.id === articleId);
+  const article = articles.find((a) => String(a.id) === String(articleId));
 
   // Fetch comments from local Express backend database API
   const fetchComments = async () => {
